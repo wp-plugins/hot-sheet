@@ -36,6 +36,9 @@ To remove a post from the Hot Sheet before it expires, simply clear the Hot Shee
 
 == Changelog ==
 
+= 1.1.0 =
+* Made hot sheet a category aware multi-widget - you can now have multiple hot sheets - each displaying from a different category
+
 = 1.0.5 =
 * Fixed handling of quotes in widget title
 
@@ -43,6 +46,9 @@ To remove a post from the Hot Sheet before it expires, simply clear the Hot Shee
 * Initial Release
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+* Hot sheet is now a multi-widget.  You can have more than one hot sheet.  You will have to re-add the widget to your sidebar after upgrade.
 
 = 1.0.5 =
 * Quotes and apostrophes in widget title are now displayed properly

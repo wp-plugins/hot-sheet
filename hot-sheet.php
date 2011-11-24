@@ -3,7 +3,7 @@
 Plugin Name: Hot Sheet by Designgeneeers!
 Plugin URI: http://www.designgeneers.com/plugins/hot-sheet
 Description: Hot Sheet provides a WordPress widget that can display a list of posts until their expiration date.  Also useful for a list of upcoming events.  To add a post to the Hot Sheet, simply set a date in the Hot Sheet options for the post.  To leave a post off of the Hot Sheet, leave the date empty.
-Version: 1.0.5
+Version: 1.1.0
 Author: Designgeneers
 Author URI: http://www.designgeneers.com
 License: GPL2
@@ -99,90 +99,146 @@ function dgx_hotsheet_save_postdata( $post_id ) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function dgx_hotsheet_widget($args)
-{
-	extract($args);
-
-	$title = get_option("dgx_hotsheet_title");
-	if (empty($title))
-	{
-		$title = "Hot Sheet";
+class dgx_hotsheet_widget extends WP_Widget {
+	function dgx_hotsheet_widget() {
+		$widget_ops = array( 'classname' => 'dgx_hotsheet_widget',
+		       	'description' => 'Easy to use widget that features posts until a certain date - great for events or news - now supporting multi-widget and by-category display.' );
+		$control_ops = array( 'width' => 300, 'height' => 350, 'id_base' => 'dgx_hotsheet_widget' );
+		$this->WP_Widget( 'dgx_hotsheet_widget', 'Hot Sheet by Designgeneers!', $widget_ops, $control_ops );
 	}
 
-	$title = htmlspecialchars($title, ENT_QUOTES); // We always present it with the special chars encoded
-	$title = stripslashes($title); // Looks like these get added by set_option
+	/***********************************************************************************************************/
+	function widget($args, $instance) {
+		extract($args, EXTR_SKIP);
 
-	$foundOne = false;
-	$widgetContent = "";
+		$catID = $instance['catID'];
+		$title = $instance['title'];
+		$title = apply_filters('widget_title', $title);
 
-	$widgetContent .= $before_widget;
-	$widgetContent .= $before_title . $title . $after_title;
-	$widgetContent .= "<ul>\n";
+		$content = "";
 
-	$args = array(
-		'numberposts'   => -1,
-		'post_type'     => 'post',
-		'orderby'	=> 'meta_value',
-		'order'		=> 'ASC',
-		'meta_key'      => '_dgx_hotsheet_date'
-	); 
-
-	$myPosts = get_posts($args); 
-
-	foreach ($myPosts as $myPost)
-	{ 
-		$postID = $myPost->ID;
-		$postTitle = get_the_title($postID);
-		$postLink = get_permalink($postID);
-		$postTimestamp =  get_post_meta($postID, '_dgx_hotsheet_date', true);
-		$timestampNow = time();
-		$diff = $postTimestamp - $timestampNow;
-		$diffHours = $diff / 3600;
-		if ($postTimestamp >= $timestampNow)
+		// Find qualifying posts
+		$args = array(
+			'numberposts'   => -1,
+			'post_type'     => 'post',
+			'orderby'	=> 'meta_value',
+			'order'		=> 'ASC',
+			'meta_key'      => '_dgx_hotsheet_date'
+		);
+	
+		if (empty($catID))
 		{
-			$foundOne = true;
-			$widgetContent .= "   <li><a href=\"$postLink\" title=\"$postTitle\">$postTitle</a></li>\n";
+			$catID = "0";
+		}
+
+		if (strcasecmp($hotSheetCatID, "0") <> 0)
+		{
+			$args['cat'] = $catID;
+		}
+
+		$myPosts = get_posts($args); 
+
+		foreach ($myPosts as $myPost)
+		{ 
+			$postID = $myPost->ID;
+			$postTitle = get_the_title($postID);
+			$postLink = get_permalink($postID);
+			$postTimestamp =  get_post_meta($postID, '_dgx_hotsheet_date', true);
+			$timestampNow = time();
+			if ($postTimestamp >= $timestampNow)
+			{
+				$foundOne = true;
+				$content .= "   <li><a href=\"$postLink\" title=\"$postTitle\">$postTitle</a></li>\n";
+			}
+		}
+
+		if (!empty($content))
+		{
+			echo $before_widget;
+
+			if (!empty($title))
+			{
+				echo $before_title . $title . $after_title;
+			}
+
+			echo "<ul>\n";
+			echo $content;
+			echo "</ul>\n";
+
+			echo $after_widget;
 		}
 	}
-	$widgetContent .= "</ul>\n";
-	$widgetContent .= $after_widget;
 
-	if ($foundOne)
-	{
-		echo $widgetContent;
+	/***********************************************************************************************************/
+	function update($new_instance, $old_instance) {
+		$instance = $old_instance;
+
+		$instance['title'] = strip_tags($new_instance['title']);
+		$instance['catID'] = strip_tags($new_instance['catID']);
+
+		return $instance;
+	}
+  
+	/***********************************************************************************************************/
+	function form($instance) {
+		$defaults = array( 'catID' => '0' );
+		$instance = wp_parse_args( (array) $instance, $defaults );
+
+		$titleFieldID = $this->get_field_id('title');
+		$titleFieldName = $this->get_field_name('title');
+		$titleFieldValue = $instance['title'];
+
+		$catFieldID = $this->get_field_id('catID');
+		$catFieldName = $this->get_field_name('catID');
+		$catFieldValue = $instance['catID'];
+
+		$titleFieldValue = htmlspecialchars($titleFieldValue, ENT_QUOTES);
+
+		echo "<p>";
+		echo "<label for=\"$pageFieldID\">Title: </label>";
+		echo "<input type=\"text\" id=\"$titleFieldID\" name=\"$titleFieldName\" value=\"$titleFieldValue\" />";
+		echo "</p>";
+
+		// Show the category selector
+		$myCategories = get_terms('category');
+
+		echo "<p>";
+		echo "<label for=\"$catFieldID\">Category: </label>";
+		echo "<select id=\"$catFieldID\" name=\"$catFieldName\" >";
+
+		if (strcasecmp($catFieldValue, "0") == 0)
+		{
+			echo "<option value=\"0\" selected=\"selected\" >All </option>";
+		}
+		else
+		{
+			echo "<option value=\"0\">All </option>";
+		}
+
+		foreach ($myCategories as $myCategory) {
+			$catID = $myCategory->term_id;
+			$catTitle = $myCategory->name;
+
+			$selected = "";
+			if ($catID == $catFieldValue) {
+				$selected = " selected=\"selected\" ";
+			}
+
+			echo "<option value=\"$catID\" $selected>$catTitle</option>";
+		}
+
+		echo "</select>\n";
+		echo "</p>";
 	}
 }
 
-function dgx_hotsheet_widget_control()
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+add_action('init', 'dgx_hotsheet_init', 1);
+
+function dgx_hotsheet_init()
 {
-	$title = get_option("dgx_hotsheet_title");
-	$title = stripslashes($title); // get_option likes to add slashies
-
-	if (empty($title))
-	{
-		$title = "Hot Sheet";
-	}
-
-	if ($_POST['dgx_hotsheet_submit'])
-	{
-		$newtitle = htmlspecialchars_decode($_POST['dgx_hotsheet_title'], ENT_QUOTES); // We always save it without the special chars
-		update_option("dgx_hotsheet_title", $newtitle); 
-		$title = $newtitle;
-	}
-
-	$title = htmlspecialchars($title, ENT_QUOTES); // We always present it with the special chars encoded
-	$title = stripslashes($title); // _POST likes to add slashies
-	echo "<p>\n";
-	echo "<label for=\"dgx_hotsheet_title\">Widget Title: </label>\n";
-	echo "<input type=\"text\" id=\"dgx_hotsheet_title\" name=\"dgx_hotsheet_title\" value=\"$title\" />\n";
-	echo "<input type=\"hidden\" id=\"dgx_hotsheet_submit\" name=\"dgx_hotsheet_submit\" value=\"1\" />\n";
-	echo "</p>\n";
-}
-
-add_action("plugins_loaded", "dgx_hotsheet_init");
-function dgx_hotsheet_init() {
-	register_sidebar_widget('Hot Sheet by Designgeneeers!', 'dgx_hotsheet_widget');
-	register_widget_control('Hot Sheet by Designgeneeers!', 'dgx_hotsheet_widget_control', 300, 200);
+	register_widget('dgx_hotsheet_widget');
 }
 
 ?>
