@@ -4,7 +4,7 @@ Donate link: http://www.designgeneers.com/
 Tags: event, calendar, events, hot sheet, upcoming, featured
 Requires at least: 2.5
 Tested up to: 3.2.1
-Stable tag: 1.0.5
+Stable tag: 1.1.0
 
 Hot Sheet allows you to feature posts in your sidebar up to an specific date.  
 
