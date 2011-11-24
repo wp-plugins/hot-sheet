@@ -3,8 +3,8 @@
 Plugin Name: Hot Sheet by Designgeneeers!
 Plugin URI: http://www.designgeneers.com/plugins/hot-sheet
 Description: Hot Sheet provides a WordPress widget that can display a list of posts until their expiration date.  Also useful for a list of upcoming events.  To add a post to the Hot Sheet, simply set a date in the Hot Sheet options for the post.  To leave a post off of the Hot Sheet, leave the date empty.
-Version: 1.0.4
-Author: designgeneers
+Version: 1.0.5
+Author: Designgeneers
 Author URI: http://www.designgeneers.com
 License: GPL2
 */
@@ -47,7 +47,7 @@ function dgx_hotsheet_meta_box($post) {
 	echo $hotSheetDate;
 	echo '" size="10" maxlength="10" />';
 	echo "<br><br>";
-	echo "Enter date in the form m/d/y or d-m-y.  Leave empty to leave this post off the Hot Sheet";
+	echo "Enter date in the form m/d/y.  Leave empty to leave this post off the Hot Sheet";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +109,9 @@ function dgx_hotsheet_widget($args)
 		$title = "Hot Sheet";
 	}
 
+	$title = htmlspecialchars($title, ENT_QUOTES); // We always present it with the special chars encoded
+	$title = stripslashes($title); // Looks like these get added by set_option
+
 	$foundOne = false;
 	$widgetContent = "";
 
@@ -153,6 +156,8 @@ function dgx_hotsheet_widget($args)
 function dgx_hotsheet_widget_control()
 {
 	$title = get_option("dgx_hotsheet_title");
+	$title = stripslashes($title); // get_option likes to add slashies
+
 	if (empty($title))
 	{
 		$title = "Hot Sheet";
@@ -160,17 +165,18 @@ function dgx_hotsheet_widget_control()
 
 	if ($_POST['dgx_hotsheet_submit'])
 	{
-		$newtitle = htmlspecialchars($_POST['dgx_hotsheet_title']);
-		update_option("dgx_hotsheet_title", $newtitle);
+		$newtitle = htmlspecialchars_decode($_POST['dgx_hotsheet_title'], ENT_QUOTES); // We always save it without the special chars
+		update_option("dgx_hotsheet_title", $newtitle); 
 		$title = $newtitle;
 	}
-?>
-	<p>
-	<label for="dgx_hotsheet_title">Widget Title: </label>
-	<input type="text" id="dgx_hotsheet_title" name="dgx_hotsheet_title" value="<?php echo $title;?>" />
-	<input type="hidden" id="dgx_hotsheet_submit" name="dgx_hotsheet_submit" value="1" />
-	</p>
-<?php
+
+	$title = htmlspecialchars($title, ENT_QUOTES); // We always present it with the special chars encoded
+	$title = stripslashes($title); // _POST likes to add slashies
+	echo "<p>\n";
+	echo "<label for=\"dgx_hotsheet_title\">Widget Title: </label>\n";
+	echo "<input type=\"text\" id=\"dgx_hotsheet_title\" name=\"dgx_hotsheet_title\" value=\"$title\" />\n";
+	echo "<input type=\"hidden\" id=\"dgx_hotsheet_submit\" name=\"dgx_hotsheet_submit\" value=\"1\" />\n";
+	echo "</p>\n";
 }
 
 add_action("plugins_loaded", "dgx_hotsheet_init");

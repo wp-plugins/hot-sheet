@@ -3,8 +3,8 @@ Contributors: designgeneers
 Donate link: http://www.designgeneers.com/
 Tags: event, calendar, events, hot sheet, upcoming, featured
 Requires at least: 2.5
-Tested up to: 3.1.3
-Stable tag: 1.0.4
+Tested up to: 3.2.1
+Stable tag: 1.0.5
 
 Hot Sheet allows you to feature posts in your sidebar up to an specific date.  
 
@@ -36,10 +36,16 @@ To remove a post from the Hot Sheet before it expires, simply clear the Hot Shee
 
 == Changelog ==
 
+= 1.0.5 =
+* Fixed handling of quotes in widget title
+
 = 1.0.4 =
 * Initial Release
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+* Quotes and apostrophes in widget title are now displayed properly
 
 = 1.0.4 =
 Initial release
