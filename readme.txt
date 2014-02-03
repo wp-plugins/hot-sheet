@@ -1,5 +1,5 @@
 === Plugin Name ===
-Contributors: designgeneers
+Contributors: allendav, designgeneers
 Donate link: http://www.designgeneers.com/
 Tags: event, calendar, events, hot sheet, upcoming, featured
 Requires at least: 2.5
